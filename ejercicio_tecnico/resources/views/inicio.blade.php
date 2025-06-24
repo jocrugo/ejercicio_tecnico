@@ -18,7 +18,7 @@
                     <div class="card-body d-flex flex-column justify-content-between">
                         <h5 class="card-title">Agregar Actividad</h5>
                         <p class="card-text">Planea una nueva parada para tu aventura.</p>
-                        <button class="btn btn-primary mt-auto">+ Nueva actividad</button>
+                        <button class="btn btn-primary mt-auto" data-bs-toggle="modal" data-bs-target="#modalAgregar">+ Nueva actividad</button>
                     </div>
                 </div>
             </div>
@@ -28,13 +28,53 @@
                     <div class="card-body">
                         <h5 class="card-title">Actualizar Actividad</h5>
                         <p class="card-text">Visualiza y edita tus actividades creadas.</p>
-                        <!-- Más adelante: aquí irá lista de tareas -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Modal: Agregar Actividad -->
+    <div class="modal fade" id="modalAgregar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar nueva actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregar" novalidate>
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titulo" required minlength="3" placeholder="Ej. Ir a la playa">
+                            <div class="invalid-feedback">El título es obligatorio (mínimo 3 caracteres).</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comentarios" class="form-label">Comentarios</label>
+                            <textarea class="form-control" id="comentarios" rows="3" required placeholder="Detalles, notas..."></textarea>
+                            <div class="invalid-feedback">Agrega una descripción o comentario.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap y validación -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (() => {
+        'use strict';
+        const form = document.getElementById('formAgregar');
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    })();
+    </script>
 </body>
 </html>
