@@ -258,178 +258,178 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const lista = document.getElementById('taskList');
-            const form = document.getElementById('formAgregar');
-            const token = document.querySelector('meta[name="csrf-token"]').content;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const lista    = document.getElementById('taskList');
+    const form     = document.getElementById('formAgregar');
+    const token    = document.querySelector('meta[name="csrf-token"]').content;
+    let idToComplete, liToComplete, idToDelete, liToDelete;
+    let currentFilter = 'todas';
 
-            let idToComplete = null;
-            let liToComplete = null;
-            let idToDelete = null;
-            let liToDelete = null;
+    // inicializa modales
+    const modalVer           = new bootstrap.Modal(document.getElementById('modalVer'));
+    const btnModalCheck      = document.getElementById('btnModalCheck');
+    const modalConfirmCheck  = new bootstrap.Modal(document.getElementById('modalConfirmCheck'));
+    const btnConfirmCheck    = document.querySelector('#modalConfirmCheck .btn-success');
+    const modalConfirmDelete = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+    const btnConfirmDelete   = document.querySelector('#modalConfirmDelete .btn-danger');
 
-            // Modales
-            const modalVerEl = document.getElementById('modalVer');
-            const modalVer = new bootstrap.Modal(modalVerEl);
-            const btnModalCheckInView = document.getElementById('btnModalCheck');
+    // configura botones de filtro
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // marca botón activo
+            document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // ajusta filtro (todas|pendientes|completadas)
+            currentFilter = btn.textContent.trim().toLowerCase();
+            applyFilter();
+        });
+    });
 
-            const modalConfirmCheckEl = document.getElementById('modalConfirmCheck');
-            const modalConfirmCheck = new bootstrap.Modal(modalConfirmCheckEl);
-            const btnConfirmCheck = modalConfirmCheckEl.querySelector('.btn-success');
+    // dibuja una tarea en la lista
+    function renderTask(task) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center animate__animated animate__fadeIn';
+        li.dataset.status = task.status; // 'pendiente' o 'completada'
+        if (task.status === 'completada') {
+            li.classList.add('text-decoration-line-through');
+        }
+        li.innerHTML = `
+            <span>${task.title}</span>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-info btn-ver" data-id="${task.id}">Ver</button>
+                ${task.status==='pendiente'?`<button class="btn btn-sm btn-success btn-check" data-id="${task.id}">✓</button>`:``}
+                <button class="btn btn-sm btn-danger btn-delete" data-id="${task.id}">🗑️</button>
+            </div>
+        `;
 
-            const modalConfirmDeleteEl = document.getElementById('modalConfirmDelete');
-            const modalConfirmDelete = new bootstrap.Modal(modalConfirmDeleteEl);
-            const btnConfirmDelete = modalConfirmDeleteEl.querySelector('.btn-danger');
-
-            // 1) Función para dibujar UNA tarea
-            function renderTask(task) {
-                const li = document.createElement('li');
-                li.className = [
-                    'list-group-item', 'd-flex', 'justify-content-between', 'align-items-center',
-                    'animate__animated', 'animate__fadeIn',
-                    task.status === 'completada' ? 'text-decoration-line-through' : ''
-                ].join(' ');
-                li.innerHTML = `
-      <span>${task.title}</span>
-      <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-info btn-ver" data-id="${task.id}">Ver</button>
-        ${task.status === 'pendiente'
-                        ? `<button class="btn btn-sm btn-success btn-check" data-id="${task.id}">✓</button>`
-                        : ''
-                    }
-        <button class="btn btn-sm btn-danger btn-delete" data-id="${task.id}">🗑️</button>
-      </div>
-    `;
-
-                // Ver detalles (solo show modalVer)
-                li.querySelector('.btn-ver').addEventListener('click', async () => {
-                    idToComplete = task.id;
-                    liToComplete = li;
-                    const res = await fetch(`/tasks/${task.id}`);
-                    const data = await res.json();
-                    document.getElementById('modalVerTitulo').textContent = `Título: ${data.title}`;
-                    document.getElementById('modalVerDescripcion').textContent = data.description;
-                    btnModalCheckInView.disabled = (data.status === 'completada');
-                    modalVer.show();
-                });
-
-                // Botón “check” en la lista abre confirmCheck
-                const btnCheck = li.querySelector('.btn-check');
-                if (btnCheck) {
-                    btnCheck.addEventListener('click', () => {
-                        idToComplete = task.id;
-                        liToComplete = li;
-                        modalConfirmCheck.show();
-                    });
-                }
-
-                // Botón “delete” abre confirmDelete
-                li.querySelector('.btn-delete').addEventListener('click', () => {
-                    idToDelete = task.id;
-                    liToDelete = li;
-                    modalConfirmDelete.show();
-                });
-
-                lista.appendChild(li);
-            }
-
-            // 2) Carga inicial de tareas
-            fetch('/tasks')
-                .then(r => r.json())
-                .then(tasks => {
-                    tasks.forEach(renderTask);
-                    updateProgressBar(); // 🔹 aquí
-                })
-                .catch(console.error);
-
-
-            // 3) Crear nueva tarea
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = document.getElementById('titulo').value.trim();
-                const description = document.getElementById('comentarios').value.trim();
-
-                const res = await fetch('/tasks', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
-                    },
-                    body: JSON.stringify({ title, description })
-                });
-                const nueva = await res.json();
-                renderTask(nueva);
-                updateProgressBar(); // 🔹 aquí
-                form.reset();
-                bootstrap.Modal.getOrCreateInstance('#modalAgregar').hide();
-            });
-
-            // 4) El botón de la modal “Ver” que marca completada abre confirmCheck
-            btnModalCheckInView.addEventListener('click', () => {
-                if (idToComplete) {
-                    modalVer.hide();
-                    modalConfirmCheck.show();
-                }
-            });
-
-            // 5) Confirmar “marcar como completada”
-            btnConfirmCheck.addEventListener('click', async () => {
-                try {
-                    const res = await fetch(`/tasks/${idToComplete}/complete`, {
-                        method: 'PUT',
-                        headers: { 'X-CSRF-TOKEN': token }
-                    });
-                    if (!res.ok) throw new Error();
-                    liToComplete.classList.add('text-decoration-line-through');
-                    liToComplete.querySelector('.btn-check')?.remove();
-                    updateProgressBar();
-                } catch {
-                    alert('No se pudo marcar la tarea como completada.');
-                } finally {
-                    modalConfirmCheck.hide();
-                }
-            });
-
-            // 6) Confirmar “eliminar”
-            btnConfirmDelete.addEventListener('click', async () => {
-                try {
-                    const res = await fetch(`/tasks/${idToDelete}`, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': token }
-                    });
-                    if (!res.ok) throw new Error();
-                    liToDelete.remove();
-                    updateProgressBar();
-                } catch {
-                    alert('No se pudo eliminar la tarea.');
-                } finally {
-                    modalConfirmDelete.hide();
-                }
-            });
+        // evento “Ver”
+        li.querySelector('.btn-ver').addEventListener('click', async () => {
+            idToComplete = task.id; liToComplete = li;
+            const res  = await fetch(`/tasks/${task.id}`);
+            const data = await res.json();
+            document.getElementById('modalVerTitulo').textContent      = `Título: ${data.title}`;
+            document.getElementById('modalVerDescripcion').textContent = data.description;
+            btnModalCheck.disabled = data.status==='completada';
+            modalVer.show();
         });
 
-        function updateProgressBar() {
-            const total = document.querySelectorAll('#taskList li').length;
-            const completadas = document.querySelectorAll('#taskList li.text-decoration-line-through').length;
-            const porcentaje = total === 0 ? 0 : Math.round((completadas / total) * 100);
+        // evento marcar completada (desde lista)
+        li.querySelector('.btn-check')?.addEventListener('click', () => {
+            idToComplete = task.id; liToComplete = li;
+            modalConfirmCheck.show();
+        });
 
-            const barra = document.getElementById('progressBar');
-            barra.style.width = `${porcentaje}%`;
-            // cambia el fondo según el porcentaje
-            barra.className = 'progress-bar ' + (
-                porcentaje === 100 ? 'bg-success' :
-                    porcentaje >= 50 ? 'bg-warning' :
-                        'bg-danger'
-            );
+        // evento eliminar
+        li.querySelector('.btn-delete').addEventListener('click', () => {
+            idToDelete = task.id; liToDelete = li;
+            modalConfirmDelete.show();
+        });
 
-            const texto = document.getElementById('progressText');
-            texto.textContent = `${completadas} de ${total} completadas`;
+        lista.appendChild(li);
+    }
+
+    // carga inicial de tareas
+    fetch('/tasks')
+        .then(r => r.json())
+        .then(tasks => {
+            tasks.forEach(renderTask);
+            applyFilter();
+        });
+
+    // agregar nueva tarea
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const title       = document.getElementById('titulo').value.trim();
+        const description = document.getElementById('comentarios').value.trim();
+        const res = await fetch('/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json','X-CSRF-TOKEN':token },
+            body: JSON.stringify({ title, description })
+        });
+        const nueva = await res.json();
+        renderTask(nueva);
+        applyFilter();
+        form.reset();
+        bootstrap.Modal.getOrCreateInstance('#modalAgregar').hide();
+    });
+
+    // completar desde modal “Ver”
+    btnModalCheck.addEventListener('click', () => {
+        modalVer.hide();
+        modalConfirmCheck.show();
+    });
+
+    // confirmar completada
+    btnConfirmCheck.addEventListener('click', async () => {
+        await fetch(`/tasks/${idToComplete}/complete`, {
+            method: 'PUT',
+            headers: { 'X-CSRF-TOKEN': token }
+        });
+        liToComplete.classList.add('text-decoration-line-through');
+        liToComplete.dataset.status = 'completada';
+        liToComplete.querySelector('.btn-check')?.remove();
+        applyFilter();
+        modalConfirmCheck.hide();
+    });
+
+    // confirmar eliminar
+    btnConfirmDelete.addEventListener('click', async () => {
+        await fetch(`/tasks/${idToDelete}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': token }
+        });
+        liToDelete.remove();
+        applyFilter();
+        modalConfirmDelete.hide();
+    });
+
+    // ——— LÓGICA DE FILTRADO ———
+    function applyFilter() {
+        // recorre cada elemento <li> y lo oculta o muestra según el filtro
+        lista.querySelectorAll('li').forEach(li => {
+            const status = li.dataset.status;
+            const mostrar =
+                currentFilter === 'todas'
+                || (currentFilter === 'pendientes'  && status === 'pendiente')
+                || (currentFilter === 'completadas' && status === 'completada');
+            li.classList.toggle('d-none', !mostrar);
+        });
+        updateUI();
+    }
+
+    // actualiza barra de progreso y mensaje de lista vacía
+    function updateUI() {
+        // sólo contamos las <li> visibles
+        const visibles = Array.from(lista.querySelectorAll('li:not(.d-none)'));
+        const total = visibles.filter(li => li.dataset.status).length;
+        const done  = visibles.filter(li => li.classList.contains('text-decoration-line-through')).length;
+        const pct   = total ? Math.round(done/total*100) : 0;
+
+        // actualiza barra y texto
+        const barra = document.getElementById('progressBar');
+        barra.style.width = `${pct}%`;
+        barra.className = 'progress-bar ' + (pct===100?'bg-success':pct>=50?'bg-warning':'bg-danger');
+        document.getElementById('progressText').textContent = `${done} de ${total} completadas`;
+
+        // mensaje "vacío"
+        let emptyMsg = document.getElementById('emptyMessage');
+        if (total === 0) {
+            if (!emptyMsg) {
+                emptyMsg = document.createElement('li');
+                emptyMsg.id = 'emptyMessage';
+                emptyMsg.className = 'list-group-item text-center text-muted';
+                emptyMsg.textContent = 'Aún no hay actividades registradas';
+                lista.appendChild(emptyMsg);
+            }
+        } else {
+            emptyMsg?.remove();
         }
+    }
 
+});
+</script>
 
-
-    </script>
 
 
 </body>
