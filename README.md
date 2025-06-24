@@ -75,7 +75,7 @@ php artisan migrate
 php artisan serve
 ```
 
-Accede desde [http://localhost:8000](http://localhost:8000)
+Accede desde [http://localhost:8000/inicio](http://localhost:8000/inicio)
 
 ---
 
