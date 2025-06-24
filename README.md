@@ -36,8 +36,8 @@ Una aplicación web interactiva y responsive para organizar actividades antes de
 1. **Clona el repositorio**
 
 ```bash
-git clone https://github.com/tuusuario/nombre-proyecto.git
-cd nombre-proyecto
+git clone https://github.com/jocrugo/ejercicio_tecnico.git
+cd ejercicio_tecnico
 ```
 
 2. **Instala dependencias**
@@ -121,8 +121,8 @@ Schema::create('tasks', function (Blueprint $table) {
 
 ## 📌 Autor
 
-**Tu Nombre**\
-[GitHub](https://github.com/tuusuario) | [LinkedIn](https://www.linkedin.com/in/tuusuario)
+Josué Cruz González
+[GitHub](https://github.com/jocrugo) 
 
 ---
 
