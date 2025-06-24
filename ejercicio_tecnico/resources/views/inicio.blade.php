@@ -101,11 +101,6 @@
                 color: #000;
             }
 
-            .progress-bar {
-                background-color: #28a745 !important;
-                color: #000;
-            }
-
             .text-dynamic {
                 color: #f8f9fa !important;
             }
@@ -114,6 +109,10 @@
                 background-color: rgba(102, 178, 255, 0.2);
                 transform: scale(1.01);
             }
+        }
+
+        .progress-bar {
+            background-color: #28a745;
         }
     </style>
 </head>
@@ -134,11 +133,15 @@
             </div>
         </div>
 
-        <div class="container mb-4">
-            <div class="progress" style="height: 25px;">
-                <div class="progress-bar bg-success" style="width: 50%;">2 de 4 completadas</div>
-            </div>
+        <div class="progress position-relative" style="height: 25px; margin-bottom: 20px; " >
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+            <span id="progressText"
+                class="position-absolute top-0 start-50 translate-middle-x h-100 d-flex align-items-center justify-content-center text-white fw-bold">
+                0 de 0 completadas
+            </span>
         </div>
+
+
 
         <div class="row g-4">
             <div class="col-md-6">
@@ -334,14 +337,19 @@
             // 2) Carga inicial de tareas
             fetch('/tasks')
                 .then(r => r.json())
-                .then(tasks => tasks.forEach(renderTask))
+                .then(tasks => {
+                    tasks.forEach(renderTask);
+                    updateProgressBar(); // 🔹 aquí
+                })
                 .catch(console.error);
+
 
             // 3) Crear nueva tarea
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const title = form.titulo.value.trim();
-                const description = form.comentarios.value.trim();
+                const title = document.getElementById('titulo').value.trim();
+                const description = document.getElementById('comentarios').value.trim();
+
                 const res = await fetch('/tasks', {
                     method: 'POST',
                     headers: {
@@ -352,6 +360,7 @@
                 });
                 const nueva = await res.json();
                 renderTask(nueva);
+                updateProgressBar(); // 🔹 aquí
                 form.reset();
                 bootstrap.Modal.getOrCreateInstance('#modalAgregar').hide();
             });
@@ -374,6 +383,7 @@
                     if (!res.ok) throw new Error();
                     liToComplete.classList.add('text-decoration-line-through');
                     liToComplete.querySelector('.btn-check')?.remove();
+                    updateProgressBar();
                 } catch {
                     alert('No se pudo marcar la tarea como completada.');
                 } finally {
@@ -390,6 +400,7 @@
                     });
                     if (!res.ok) throw new Error();
                     liToDelete.remove();
+                    updateProgressBar();
                 } catch {
                     alert('No se pudo eliminar la tarea.');
                 } finally {
@@ -397,6 +408,27 @@
                 }
             });
         });
+
+        function updateProgressBar() {
+            const total = document.querySelectorAll('#taskList li').length;
+            const completadas = document.querySelectorAll('#taskList li.text-decoration-line-through').length;
+            const porcentaje = total === 0 ? 0 : Math.round((completadas / total) * 100);
+
+            const barra = document.getElementById('progressBar');
+            barra.style.width = `${porcentaje}%`;
+            // cambia el fondo según el porcentaje
+            barra.className = 'progress-bar ' + (
+                porcentaje === 100 ? 'bg-success' :
+                    porcentaje >= 50 ? 'bg-warning' :
+                        'bg-danger'
+            );
+
+            const texto = document.getElementById('progressText');
+            texto.textContent = `${completadas} de ${total} completadas`;
+        }
+
+
+
     </script>
 
 
