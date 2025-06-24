@@ -108,6 +108,11 @@ Schema::create('tasks', function (Blueprint $table) {
 ---
 
 ## 📸 Capturas
+![image](https://github.com/user-attachments/assets/1162ca3d-e5dc-4674-bcd4-b9a6a14c6bc3)
+![image](https://github.com/user-attachments/assets/ab10102c-4d6b-4f6b-b5d1-e08882466533)
+![image](https://github.com/user-attachments/assets/da66d28f-168f-42d6-ae5c-4741b8a20218)
+![image](https://github.com/user-attachments/assets/4d9b9ccb-3a54-41b9-9daa-463ea0e3669f)
+
 
 ---
 
