@@ -34,17 +34,25 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Subir al Nevado
                                 <div>
-                                    <button class="btn btn-sm btn-info text-white">Ver</button>
-                                    <button class="btn btn-sm btn-success">&check;</button>
-                                    <button class="btn btn-sm btn-danger">&#128465;</button>
+                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
+                                        data-bs-target="#modalVer">Ver</button>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmCheck">&check;</button>
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
+
                                 </div>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Visitar pueblito mágico
                                 <div>
-                                    <button class="btn btn-sm btn-info text-white">Ver</button>
-                                    <button class="btn btn-sm btn-success">&check;</button>
-                                    <button class="btn btn-sm btn-danger">&#128465;</button>
+                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
+                                        data-bs-target="#modalVer">Ver</button>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmCheck">&check;</button>
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
+
                                 </div>
                             </li>
                         </ul>
@@ -82,6 +90,63 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal: Ver detalles -->
+    <div class="modal fade" id="modalVer" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content animate__animated animate__fadeInUp rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles de la actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Título: Subir al Nevado</h5>
+                    <p>Subiremos al Nevado de Toluca el sábado. Llevar ropa térmica, agua y snacks. Punto de reunión:
+                        entrada del parque 7:00 AM.</p>
+                    <button class="btn btn-secondary mt-2" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar completado -->
+    <div class="modal fade" id="modalConfirmCheck" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Marcar como completada?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Esta actividad se moverá a tu lista de tareas completadas. ¿Deseas continuar?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success">Sí, marcar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar eliminación -->
+    <div class="modal fade" id="modalConfirmDelete" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content animate__animated animate__fadeIn">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Eliminar actividad?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Esta acción no se puede deshacer. ¿Estás seguro de eliminar la actividad?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger">Sí, eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Bootstrap y validación -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
