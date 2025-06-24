@@ -7,6 +7,7 @@
     <title>To Do List - Viaje</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
             background-color: #f8f9fa;
@@ -120,7 +121,8 @@
 <body>
     <div class="container py-5">
         <h1 class="text-center mb-0 animate__animated animate__fadeInDown">To Do List - Viaje ✈️</h1>
-        <p class="text-center text-dynamic mb-5 animate__animated animate__fadeInUp">Organiza, prioriza y disfruta tu aventura 🌄📋</p>
+        <p class="text-center text-dynamic mb-5 animate__animated animate__fadeInUp">Organiza, prioriza y disfruta tu
+            aventura 🌄📋</p>
 
         <div class="container mb-4">
             <div class="d-flex justify-content-center">
@@ -158,17 +160,23 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Subir al Nevado
                                 <div>
-                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalVer">Ver</button>
-                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalConfirmCheck">&check;</button>
-                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalConfirmDelete">&#128465;</button>
+                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
+                                        data-bs-target="#modalVer">Ver</button>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmCheck">&check;</button>
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
                                 </div>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Visitar pueblito mágico
                                 <div>
-                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalVer">Ver</button>
-                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalConfirmCheck">&check;</button>
-                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalConfirmDelete">&#128465;</button>
+                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
+                                        data-bs-target="#modalVer">Ver</button>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmCheck">&check;</button>
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
                                 </div>
                             </li>
                         </ul>
@@ -190,12 +198,14 @@
                     <form id="formAgregar" novalidate>
                         <div class="mb-3">
                             <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="titulo" required minlength="3" placeholder="Ej. Ir a la playa">
+                            <input type="text" class="form-control" id="titulo" required minlength="3"
+                                placeholder="Ej. Ir a la playa">
                             <div class="invalid-feedback">El título es obligatorio (mínimo 3 caracteres).</div>
                         </div>
                         <div class="mb-3">
                             <label for="comentarios" class="form-label">Comentarios</label>
-                            <textarea class="form-control" id="comentarios" rows="3" required placeholder="Detalles, notas..."></textarea>
+                            <textarea class="form-control" id="comentarios" rows="3" required
+                                placeholder="Detalles, notas..."></textarea>
                             <div class="invalid-feedback">Agrega una descripción o comentario.</div>
                         </div>
                         <button type="submit" class="btn btn-primary">Agregar</button>
@@ -214,7 +224,8 @@
                 </div>
                 <div class="modal-body">
                     <h5 class="text-dynamic">Título: Subir al Nevado</h5>
-                    <p class="text-dynamic">Subiremos al Nevado de Toluca el sábado. Llevar ropa térmica, agua y snacks. Punto de reunión: entrada del parque 7:00 AM.</p>
+                    <p class="text-dynamic">Subiremos al Nevado de Toluca el sábado. Llevar ropa térmica, agua y snacks.
+                        Punto de reunión: entrada del parque 7:00 AM.</p>
                     <button class="btn btn-secondary mt-2" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
@@ -260,17 +271,72 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (() => {
-            'use strict'
             const form = document.getElementById('formAgregar');
-            form.addEventListener('submit', event => {
+            const tituloInput = document.getElementById('titulo');
+            const comentariosInput = document.getElementById('comentarios');
+            const lista = document.querySelector('.list-group');
+
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
                 if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
+                    console.warn('Formulario inválido');
+                    form.classList.add('was-validated');
+                    return;
                 }
-                form.classList.add('was-validated');
-            }, false);
+
+                const datos = {
+                    title: tituloInput.value.trim(),
+                    description: comentariosInput.value.trim()
+                };
+
+                console.log('Enviando datos al backend:', datos);
+
+                try {
+                    const response = await fetch('/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(datos)
+                    });
+
+
+                    console.log('Respuesta HTTP:', response);
+
+                    if (!response.ok) throw new Error('Error HTTP: ' + response.status);
+
+                    const nueva = await response.json();
+                    console.log('Tarea creada:', nueva);
+
+                    // Mostrar nueva actividad
+                    const nuevaTarea = document.createElement('li');
+                    nuevaTarea.className = 'list-group-item d-flex justify-content-between align-items-center animate__animated animate__fadeIn';
+                    nuevaTarea.innerHTML = `
+                ${nueva.title}
+                <div>
+                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalVer">Ver</button>
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalConfirmCheck">&check;</button>
+                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalConfirmDelete">&#128465;</button>
+                </div>
+            `;
+                    lista.appendChild(nuevaTarea);
+
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    bootstrap.Modal.getInstance(document.getElementById('modalAgregar')).hide();
+
+                } catch (error) {
+                    console.error('Fallo en la solicitud:', error);
+                    alert('Error al guardar la tarea: ' + error.message);
+                }
+            });
         })();
     </script>
+
 </body>
 
 </html>
