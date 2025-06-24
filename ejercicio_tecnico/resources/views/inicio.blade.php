@@ -156,29 +156,8 @@
                 <div class="card shadow rounded-4 border-0 h-100 animate__animated animate__fadeInRight">
                     <div class="card-body">
                         <h5 class="card-title">Actualizar Actividad</h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Subir al Nevado
-                                <div>
-                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
-                                        data-bs-target="#modalVer">Ver</button>
-                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
-                                        data-bs-target="#modalConfirmCheck">&check;</button>
-                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
-                                </div>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Visitar pueblito mágico
-                                <div>
-                                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal"
-                                        data-bs-target="#modalVer">Ver</button>
-                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal"
-                                        data-bs-target="#modalConfirmCheck">&check;</button>
-                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#modalConfirmDelete">&#128465;</button>
-                                </div>
-                            </li>
+                        <ul id="taskList" class="list-group list-group-flush">
+
                         </ul>
                     </div>
                 </div>
@@ -223,14 +202,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <h5 class="text-dynamic">Título: Subir al Nevado</h5>
-                    <p class="text-dynamic">Subiremos al Nevado de Toluca el sábado. Llevar ropa térmica, agua y snacks.
-                        Punto de reunión: entrada del parque 7:00 AM.</p>
-                    <button class="btn btn-secondary mt-2" data-bs-dismiss="modal">Cerrar</button>
+                    <h5 id="modalVerTitulo" class="text-dynamic">Título</h5>
+                    <p id="modalVerDescripcion" class="text-dynamic">Descripción</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="btnModalCheck">
+                        Marcar como completada
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <div class="modal fade" id="modalConfirmCheck" tabindex="-1">
         <div class="modal-dialog">
@@ -270,72 +256,149 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        (() => {
+        document.addEventListener('DOMContentLoaded', () => {
+            const lista = document.getElementById('taskList');
             const form = document.getElementById('formAgregar');
-            const tituloInput = document.getElementById('titulo');
-            const comentariosInput = document.getElementById('comentarios');
-            const lista = document.querySelector('.list-group');
+            const token = document.querySelector('meta[name="csrf-token"]').content;
 
-            form.addEventListener('submit', async event => {
-                event.preventDefault();
-                event.stopPropagation();
+            let idToComplete = null;
+            let liToComplete = null;
+            let idToDelete = null;
+            let liToDelete = null;
 
-                if (!form.checkValidity()) {
-                    console.warn('Formulario inválido');
-                    form.classList.add('was-validated');
-                    return;
+            // Modales
+            const modalVerEl = document.getElementById('modalVer');
+            const modalVer = new bootstrap.Modal(modalVerEl);
+            const btnModalCheckInView = document.getElementById('btnModalCheck');
+
+            const modalConfirmCheckEl = document.getElementById('modalConfirmCheck');
+            const modalConfirmCheck = new bootstrap.Modal(modalConfirmCheckEl);
+            const btnConfirmCheck = modalConfirmCheckEl.querySelector('.btn-success');
+
+            const modalConfirmDeleteEl = document.getElementById('modalConfirmDelete');
+            const modalConfirmDelete = new bootstrap.Modal(modalConfirmDeleteEl);
+            const btnConfirmDelete = modalConfirmDeleteEl.querySelector('.btn-danger');
+
+            // 1) Función para dibujar UNA tarea
+            function renderTask(task) {
+                const li = document.createElement('li');
+                li.className = [
+                    'list-group-item', 'd-flex', 'justify-content-between', 'align-items-center',
+                    'animate__animated', 'animate__fadeIn',
+                    task.status === 'completada' ? 'text-decoration-line-through' : ''
+                ].join(' ');
+                li.innerHTML = `
+      <span>${task.title}</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-info btn-ver" data-id="${task.id}">Ver</button>
+        ${task.status === 'pendiente'
+                        ? `<button class="btn btn-sm btn-success btn-check" data-id="${task.id}">✓</button>`
+                        : ''
+                    }
+        <button class="btn btn-sm btn-danger btn-delete" data-id="${task.id}">🗑️</button>
+      </div>
+    `;
+
+                // Ver detalles (solo show modalVer)
+                li.querySelector('.btn-ver').addEventListener('click', async () => {
+                    idToComplete = task.id;
+                    liToComplete = li;
+                    const res = await fetch(`/tasks/${task.id}`);
+                    const data = await res.json();
+                    document.getElementById('modalVerTitulo').textContent = `Título: ${data.title}`;
+                    document.getElementById('modalVerDescripcion').textContent = data.description;
+                    btnModalCheckInView.disabled = (data.status === 'completada');
+                    modalVer.show();
+                });
+
+                // Botón “check” en la lista abre confirmCheck
+                const btnCheck = li.querySelector('.btn-check');
+                if (btnCheck) {
+                    btnCheck.addEventListener('click', () => {
+                        idToComplete = task.id;
+                        liToComplete = li;
+                        modalConfirmCheck.show();
+                    });
                 }
 
-                const datos = {
-                    title: tituloInput.value.trim(),
-                    description: comentariosInput.value.trim()
-                };
+                // Botón “delete” abre confirmDelete
+                li.querySelector('.btn-delete').addEventListener('click', () => {
+                    idToDelete = task.id;
+                    liToDelete = li;
+                    modalConfirmDelete.show();
+                });
 
-                console.log('Enviando datos al backend:', datos);
+                lista.appendChild(li);
+            }
 
-                try {
-                    const response = await fetch('/tasks', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify(datos)
-                    });
+            // 2) Carga inicial de tareas
+            fetch('/tasks')
+                .then(r => r.json())
+                .then(tasks => tasks.forEach(renderTask))
+                .catch(console.error);
 
+            // 3) Crear nueva tarea
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = form.titulo.value.trim();
+                const description = form.comentarios.value.trim();
+                const res = await fetch('/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({ title, description })
+                });
+                const nueva = await res.json();
+                renderTask(nueva);
+                form.reset();
+                bootstrap.Modal.getOrCreateInstance('#modalAgregar').hide();
+            });
 
-                    console.log('Respuesta HTTP:', response);
-
-                    if (!response.ok) throw new Error('Error HTTP: ' + response.status);
-
-                    const nueva = await response.json();
-                    console.log('Tarea creada:', nueva);
-
-                    // Mostrar nueva actividad
-                    const nuevaTarea = document.createElement('li');
-                    nuevaTarea.className = 'list-group-item d-flex justify-content-between align-items-center animate__animated animate__fadeIn';
-                    nuevaTarea.innerHTML = `
-                ${nueva.title}
-                <div>
-                    <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalVer">Ver</button>
-                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalConfirmCheck">&check;</button>
-                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalConfirmDelete">&#128465;</button>
-                </div>
-            `;
-                    lista.appendChild(nuevaTarea);
-
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    bootstrap.Modal.getInstance(document.getElementById('modalAgregar')).hide();
-
-                } catch (error) {
-                    console.error('Fallo en la solicitud:', error);
-                    alert('Error al guardar la tarea: ' + error.message);
+            // 4) El botón de la modal “Ver” que marca completada abre confirmCheck
+            btnModalCheckInView.addEventListener('click', () => {
+                if (idToComplete) {
+                    modalVer.hide();
+                    modalConfirmCheck.show();
                 }
             });
-        })();
+
+            // 5) Confirmar “marcar como completada”
+            btnConfirmCheck.addEventListener('click', async () => {
+                try {
+                    const res = await fetch(`/tasks/${idToComplete}/complete`, {
+                        method: 'PUT',
+                        headers: { 'X-CSRF-TOKEN': token }
+                    });
+                    if (!res.ok) throw new Error();
+                    liToComplete.classList.add('text-decoration-line-through');
+                    liToComplete.querySelector('.btn-check')?.remove();
+                } catch {
+                    alert('No se pudo marcar la tarea como completada.');
+                } finally {
+                    modalConfirmCheck.hide();
+                }
+            });
+
+            // 6) Confirmar “eliminar”
+            btnConfirmDelete.addEventListener('click', async () => {
+                try {
+                    const res = await fetch(`/tasks/${idToDelete}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': token }
+                    });
+                    if (!res.ok) throw new Error();
+                    liToDelete.remove();
+                } catch {
+                    alert('No se pudo eliminar la tarea.');
+                } finally {
+                    modalConfirmDelete.hide();
+                }
+            });
+        });
     </script>
+
 
 </body>
 

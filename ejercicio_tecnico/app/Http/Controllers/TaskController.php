@@ -8,6 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
+
+    public function inicio()
+    {
+        $tasks = Task::all();
+        return view('inicio', compact('tasks'));
+    }
+
+    public function index()
+    {
+        return response()->json(Task::all());
+    }
+
     public function store(Request $request)
     {
         Log::info('Solicitud recibida en /api/tasks', $request->all());
@@ -33,5 +45,26 @@ class TaskController extends Controller
             return response()->json(['message' => 'Error al guardar tarea'], 500);
         }
     }
+
+    public function show($id)
+    {
+        return response()->json(Task::findOrFail($id));
+    }
+
+    public function complete($id)
+    {
+        $task = Task::findOrFail($id);
+        $task->status = 'completada';
+        $task->save();
+        return response()->json(['message' => 'Tarea marcada como completada']);
+    }
+
+    public function destroy($id)
+    {
+        $task = Task::findOrFail($id);
+        $task->delete();
+        return response()->json(['message' => 'Tarea eliminada']);
+    }
+
 
 }

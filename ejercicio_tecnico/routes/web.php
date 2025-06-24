@@ -7,8 +7,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/inicio', function () {
-    return view('inicio');
-});
+Route::get('/inicio', [TaskController::class, 'inicio']);
+Route::get('/tasks', [TaskController::class, 'index']);
 
 Route::post('/tasks', [TaskController::class, 'store']);
+Route::get('/tasks/{id}', [TaskController::class, 'show']); // Ver
+Route::put('/tasks/{id}/complete', [TaskController::class, 'complete']); // Marcar como completada
+Route::delete('/tasks/{id}', [TaskController::class, 'destroy']); // Eliminar
